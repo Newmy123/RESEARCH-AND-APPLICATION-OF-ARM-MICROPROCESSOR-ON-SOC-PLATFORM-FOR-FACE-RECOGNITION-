@@ -13,7 +13,7 @@
 #include <stdio.h>
 
 // Define missing macros
-#define ALT_LWFPGASLVS_OFST 0xFF2000000ULL 
+#define ALT_LWFPGASLVS_OFST 0xFF200000 
 #define LED_PIO_BASE        0x3000
 #define LED_PIO_SPAN        0x10
 // Define LED CONTROL VALUES
@@ -107,16 +107,16 @@ int main() {
             int id = -1;
             double confidence = 0.0;
             recognizer->predict(faceROI, id, confidence);
-
+	    confidence = 100 - confidence;
             string label;
-                if (confidence < 100 ) {
+                if (confidence > 50 ) {
                     label = names[id];
-		    confidence = 100 - confidence;
-
+		    if(id == 1){
+		    	*led_register = LED_ON;
+		    }
                 } else {
                     label = "unknown";
-		    confidence = 100 - confidence;
-
+		    *led_register = LED_OFF;
                 }
  		 cout << "Detected Face - ID: " << id << " Confidence: " << confidence << endl;
 
@@ -129,7 +129,7 @@ int main() {
         chrono::duration<double> elapsed = end - start;
         if (elapsed.count() >= 1.0) {
             fps = frameCount / elapsed.count();
-            frameCount = 0;
+            frameCount = 0;	
             start = chrono::steady_clock::now();
         }
 
@@ -141,7 +141,7 @@ int main() {
             break;
         }
     }
-
+    
     // Cleanup
     cout << "\n [INFO] Exiting Program and cleanup stuff" << endl;
     if (munmap(led_pio, LED_PIO_SPAN) != 0) {
